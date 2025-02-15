@@ -1,27 +1,61 @@
-import { HelloWave } from '@/components/HelloWave';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { Text, Image, StyleSheet, ScrollView, Button } from 'react-native';
-import React, {useState } from 'react';
+import { Text, Image, StyleSheet, ScrollView, Button, View } from 'react-native';
+import React, { useState } from 'react';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
+import { BacktestForm } from '@/components/BacktestForm';
 
 // Variable to hold the polling interval
 let logPollingInterval: any = null;
 
 const API_BASE_URL = 'http://127.0.0.1:5000';
 
-
 export default function HomeScreen() {
-  // Define state for logs
+  // Define state for logs and config
   const [logs, setLogs] = useState<string[]>([]);
+  const [config, setConfig] = useState({
+    symbol: 'EURUSD=X',
+    interval: '5m',
+    confidence: 0.6,
+    targetCandle: 12,
+    profitPerc: 0.10,
+    stopLossPerc: 0.05,
+    gapBetweenTrades: 0,
+    featureHorizons: [2, 8, 32, 128, 512],
+    maxPositions: 15,
+    longBias: 1.0,
+    leverage: 100,
+  });
+
+  // Function to update config
+  const handleConfigChange = (key: string, value: any) => {
+    setConfig(prev => ({
+      ...prev,
+      [key]: value
+    }));
+  };
 
   // Function to handle the "Run Backtest" button click
   const runBacktest = async () => {
     try {
-      await fetch(`${API_BASE_URL}/run_backtest`);
+      // Clear previous logs
+      setLogs([]);
+
+      // Send config to backend
+      await fetch(`${API_BASE_URL}/run_backtest`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...config
+        }),
+      });
+
       startFetchingLogs();
     } catch (error) {
       console.error('Error running backtest:', error);
+      setLogs(prev => [...prev, 'Error: Failed to start backtest']);
     }
   };
 
@@ -29,7 +63,7 @@ export default function HomeScreen() {
     // Clear any existing interval to avoid multiple intervals
     clearInterval(logPollingInterval);
 
-    // Poll the logs every 2 seconds
+    // Poll the logs every 100ms
     logPollingInterval = setInterval(fetchLogs, 100);
   };
 
@@ -66,32 +100,51 @@ export default function HomeScreen() {
           style={styles.reactLogo}
         />
       }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Backtest Trading!</ThemedText>
-        <HelloWave />
+      <ThemedView style={styles.container}>
+        <ThemedText type="title">Backtest Trading Configuration</ThemedText>
+        
+        {/* Configuration Form */}
+        <View style={styles.formContainer}>
+          <BacktestForm config={config} onConfigChange={handleConfigChange} />
+        </View>
+
         {/* "Run Backtest" Button */}
-        <Button title="Run Backtest" onPress={runBacktest} color="#007bff"/>
+        <View style={styles.buttonContainer}>
+          <Button title="Run Backtest" onPress={runBacktest} color="#007bff"/>
+        </View>
+
         {/* Logs Section */}
-        <ThemedText type="title">Logs:</ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.titleContainer}>
-      <ScrollView style={styles.logContainer}>
-          {logs.map((log, index) => (
-            <Text key={index} style={styles.logText}>
-              {log.replace(/\t/g, '    ')} 
-            </Text>
-          ))}
-        </ScrollView>
+        <View style={styles.logsSection}>
+          <ThemedText type="title">Logs:</ThemedText>
+          <ScrollView style={styles.logContainer}>
+            {logs.map((log, index) => (
+              <Text key={index} style={styles.logText}>
+                {log.replace(/\t/g, '    ')} 
+              </Text>
+            ))}
+          </ScrollView>
+        </View>
       </ThemedView>
     </ParallaxScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 20,
+  container: {
+    flex: 1,
+    padding: 16,
+  },
+  formContainer: {
+    backgroundColor: '#f5f5f5',
+    borderRadius: 12,
+    padding: 16,
+    marginVertical: 16,
+  },
+  buttonContainer: {
+    marginVertical: 16,
+  },
+  logsSection: {
+    marginTop: 16,
   },
   reactLogo: {
     height: 178,
