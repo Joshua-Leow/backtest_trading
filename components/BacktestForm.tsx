@@ -89,7 +89,7 @@ export function BacktestForm({ config, onConfigChange }: BacktestFormProps) {
         <TextInput
           style={styles.input}
           value={config.stopLossPerc.toString()}
-          onChangeText={(value) => onConfigChange('profitPerc', parseFloat(value))}
+          onChangeText={(value) => onConfigChange('stopLossPerc', parseFloat(value))}
           keyboardType="decimal-pad"
           placeholder="0.05"
         />
