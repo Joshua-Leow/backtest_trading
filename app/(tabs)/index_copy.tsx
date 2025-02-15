@@ -1,10 +1,14 @@
 import { HelloWave } from '@/components/HelloWave';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { Text, Image, StyleSheet, Platform, ScrollView, View, Button, Alert } from 'react-native';
-import React, { useEffect, useState } from 'react';
+import { Text, Image, StyleSheet, ScrollView, Button } from 'react-native';
+import React, {useState } from 'react';
 import { ThemedView } from '@/components/ThemedView';
 import { ThemedText } from '@/components/ThemedText';
-import axios from 'axios';
+
+// Variable to hold the polling interval
+let logPollingInterval: any = null;
+
+const API_BASE_URL = 'http://127.0.0.1:5000';
 
 
 export default function HomeScreen() {
@@ -12,36 +16,56 @@ export default function HomeScreen() {
   const [logs, setLogs] = useState<string[]>([]);
 
   // Function to handle the "Run Backtest" button click
-  const handleRunBacktest = async () => {
+  const runBacktest = async () => {
     try {
-      const response = await axios.get('http://127.0.0.1:5000/run_backtest');
-      console.log('Backtest triggered:', response.data);
+      await fetch(`${API_BASE_URL}/run_backtest`);
+      startFetchingLogs();
     } catch (error) {
-      console.error('Error triggering backtest:', error);
+      console.error('Error running backtest:', error);
     }
-  };  
+  };
+
+  const startFetchingLogs = () => {
+    // Clear any existing interval to avoid multiple intervals
+    clearInterval(logPollingInterval);
+
+    // Poll the logs every 2 seconds
+    logPollingInterval = setInterval(fetchLogs, 100);
+  };
+
+  const stopFetchingLogs = () => {
+    // Clear the interval to stop fetching logs
+    clearInterval(logPollingInterval);
+    logPollingInterval = null;
+  };
 
   // Function to fetch logs from the backend
   const fetchLogs = async () => {
     try {
-      const response = await axios.get('http://127.0.0.1:5000/get-logs');
-      if (response.data.new_lines) {
-        setLogs((prevLogs) => [...prevLogs, ...response.data.new_lines]);
+      const response = await fetch(`${API_BASE_URL}/get-logs`);
+      const data = await response.json();
+
+      // Append new logs to the existing log list
+      setLogs((prevLogs) => [...prevLogs, ...data.new_lines]);
+
+      // Check if "Maximum Draw-down" is in the logs, and stop fetching if it is
+      if (data.new_lines.some((line: string) => line.includes('Maximum Draw-down'))) {
+        stopFetchingLogs();
       }
     } catch (error) {
       console.error('Error fetching logs:', error);
     }
   };
 
-  // Use useEffect to fetch logs every 2 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      fetchLogs();
-    }, 2000);
+  // // Use useEffect to fetch logs every 2 seconds
+  // useEffect(() => {
+  //   const interval = setInterval(() => {
+  //     fetchLogs();
+  //   }, 2000);
 
-    // Clear the interval when the component unmounts
-    return () => clearInterval(interval);
-  }, []);
+  //   // Clear the interval when the component unmounts
+  //   return () => clearInterval(interval);
+  // }, []);
 
   return (
     <ParallaxScrollView
@@ -56,17 +80,15 @@ export default function HomeScreen() {
         <ThemedText type="title">Backtest Trading!</ThemedText>
         <HelloWave />
         {/* "Run Backtest" Button */}
-        <Button
-          title="Run Backtest"
-          onPress={handleRunBacktest}
-          color="#007bff"
-        />
+        <Button title="Run Backtest" onPress={runBacktest} color="#007bff"/>
         {/* Logs Section */}
         <ThemedText type="title">Logs:</ThemedText>
-        <ScrollView style={styles.logContainer}>
+      </ThemedView>
+      <ThemedView style={styles.titleContainer}>
+      <ScrollView style={styles.logContainer}>
           {logs.map((log, index) => (
             <Text key={index} style={styles.logText}>
-              {log}
+              {log.replace(/\t/g, '    ')} 
             </Text>
           ))}
         </ScrollView>
@@ -78,8 +100,8 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   titleContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+    alignItems: 'flex-start',
+    gap: 20,
   },
   reactLogo: {
     height: 178,
@@ -99,5 +121,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#333',
     marginBottom: 4,
+    fontFamily: 'monospace'
   },
 });
