@@ -89,7 +89,6 @@ export function BacktestForm({ config, onConfigChange }: BacktestFormProps) {
 
       <View style={styles.formGroup}>
         <ThemedText style={styles.label}>Target Candle ({config.targetCandle})</ThemedText>
-        
         <TextInput
           style={styles.input}
           value={config.targetCandle.toString()}
@@ -117,13 +116,30 @@ export function BacktestForm({ config, onConfigChange }: BacktestFormProps) {
       </View>
 
       <View style={styles.formGroup}>
-        <ThemedText style={styles.label}>Profit Percentage</ThemedText>
+        <ThemedText style={styles.label}>Profit Percentage ({config.profitPerc}%)</ThemedText>
         <TextInput
           style={styles.input}
           value={config.profitPerc.toString()}
-          onChangeText={(value) => onConfigChange('profitPerc', parseFloat(value))}
+          onChangeText={(value) => {
+            const parsedValue = parseInt(value, 10);
+            const newValue = isNaN(parsedValue) ? 0 : parsedValue;
+            onConfigChange('profitPerc', newValue);
+          }}
           keyboardType="decimal-pad"
-          placeholder="0.10"
+          placeholder="240"
+        />
+        <Slider
+          style={styles.slider}
+          minimumValue={0.001}
+          maximumValue={10}
+          step={0.001}
+          value={config.profitPerc}
+          onValueChange={(value) => {
+            onConfigChange('profitPerc', value);
+          }}
+          minimumTrackTintColor="#007bff"
+          maximumTrackTintColor="#ddd"
+          thumbTintColor="#007bff"
         />
       </View>
 
