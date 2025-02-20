@@ -94,7 +94,7 @@ export function BacktestForm({ config, onConfigChange }: BacktestFormProps) {
           value={config.targetCandle.toString()}
           onChangeText={(value) => {
             const parsedValue = parseInt(value, 10);
-            const newValue = isNaN(parsedValue) ? 0 : parsedValue;
+            const newValue = isNaN(parsedValue) ? 1 : parsedValue;
             onConfigChange('targetCandle', newValue);
           }}
           keyboardType="number-pad"
