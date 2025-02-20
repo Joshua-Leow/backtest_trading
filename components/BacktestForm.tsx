@@ -88,33 +88,33 @@ export function BacktestForm({ config, onConfigChange }: BacktestFormProps) {
       </View>
 
       <View style={styles.formGroup}>
-  <ThemedText style={styles.label}>Target Candle ({config.targetCandle})</ThemedText>
-  
-  <TextInput
-    style={styles.input}
-    value={config.targetCandle.toString()}
-    onChangeText={(value) => {
-      const parsedValue = parseInt(value, 10);
-      const newValue = isNaN(parsedValue) ? 0 : parsedValue;
-      onConfigChange('targetCandle', newValue);
-    }}
-    keyboardType="number-pad"
-    placeholder="240"
-  />
-  <Slider
-    style={styles.slider}
-    minimumValue={1}
-    maximumValue={10000}
-    step={1}
-    value={config.targetCandle}
-    onValueChange={(value) => {
-      onConfigChange('targetCandle', value);
-    }}
-    minimumTrackTintColor="#007bff"
-    maximumTrackTintColor="#ddd"
-    thumbTintColor="#007bff"
-  />
-</View>
+        <ThemedText style={styles.label}>Target Candle ({config.targetCandle})</ThemedText>
+        
+        <TextInput
+          style={styles.input}
+          value={config.targetCandle.toString()}
+          onChangeText={(value) => {
+            const parsedValue = parseInt(value, 10);
+            const newValue = isNaN(parsedValue) ? 0 : parsedValue;
+            onConfigChange('targetCandle', newValue);
+          }}
+          keyboardType="number-pad"
+          placeholder="240"
+        />
+        <Slider
+          style={styles.slider}
+          minimumValue={1}
+          maximumValue={10000}
+          step={1}
+          value={config.targetCandle}
+          onValueChange={(value) => {
+            onConfigChange('targetCandle', value);
+          }}
+          minimumTrackTintColor="#007bff"
+          maximumTrackTintColor="#ddd"
+          thumbTintColor="#007bff"
+        />
+      </View>
 
       <View style={styles.formGroup}>
         <ThemedText style={styles.label}>Profit Percentage</ThemedText>
