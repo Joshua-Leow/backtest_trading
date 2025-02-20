@@ -244,13 +244,30 @@ export function BacktestForm({ config, onConfigChange }: BacktestFormProps) {
       </View>
 
       <View style={styles.formGroup}>
-        <ThemedText style={styles.label}>Gap Between Trades</ThemedText>
+        <ThemedText style={styles.label}>Gap Between Trades ({config.gapBetweenTrades})</ThemedText>
         <TextInput
           style={styles.input}
           value={config.gapBetweenTrades.toString()}
-          onChangeText={(value) => onConfigChange('gapBetweenTrades', parseInt(value))}
+          onChangeText={(value) => {
+            const parsedValue = parseInt(value, 10);
+            const newValue = isNaN(parsedValue) ? 0 : parsedValue;
+            onConfigChange('gapBetweenTrades', newValue);
+          }}
           keyboardType="number-pad"
           placeholder="0"
+        />
+        <Slider
+          style={styles.slider}
+          minimumValue={0}
+          maximumValue={100}
+          step={1}
+          value={config.gapBetweenTrades}
+          onValueChange={(value) => {
+            onConfigChange('gapBetweenTrades', value);
+          }}
+          minimumTrackTintColor="#007bff"
+          maximumTrackTintColor="#ddd"
+          thumbTintColor="#007bff"
         />
       </View>
 
