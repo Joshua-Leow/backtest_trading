@@ -272,23 +272,30 @@ export function BacktestForm({ config, onConfigChange }: BacktestFormProps) {
       </View>
 
       <View style={styles.formGroup}>
-        <ThemedText style={styles.label}>Feature Horizons (comma-separated)</ThemedText>
-        <TextInput
-          style={styles.input}
-          value={config.featureHorizons.join(', ')}
-          onChangeText={handleFeatureHorizonsChange}
-          placeholder="2, 8, 32, 128, 512"
-        />
-      </View>
-
-      <View style={styles.formGroup}>
-        <ThemedText style={styles.label}>Max Positions</ThemedText>
+        <ThemedText style={styles.label}>Max Positions ({config.maxPositions})</ThemedText>
         <TextInput
           style={styles.input}
           value={config.maxPositions.toString()}
-          onChangeText={(value) => onConfigChange('maxPositions', parseInt(value))}
+          onChangeText={(value) => {
+            const parsedValue = parseInt(value, 10);
+            const newValue = isNaN(parsedValue) ? 1 : parsedValue;
+            onConfigChange('maxPositions', newValue);
+          }}
           keyboardType="number-pad"
-          placeholder="15"
+          placeholder="10"
+        />
+        <Slider
+          style={styles.slider}
+          minimumValue={1}
+          maximumValue={100}
+          step={1}
+          value={config.maxPositions}
+          onValueChange={(value) => {
+            onConfigChange('maxPositions', value);
+          }}
+          minimumTrackTintColor="#007bff"
+          maximumTrackTintColor="#ddd"
+          thumbTintColor="#007bff"
         />
       </View>
 
