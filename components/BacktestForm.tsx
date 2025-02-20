@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, TextInput, StyleSheet, ScrollView } from 'react-native';
+import { View, TextInput, StyleSheet, ScrollView, TouchableOpacity, Switch, Text } from 'react-native';
 import { ThemedText } from './ThemedText';
+import Slider from '@react-native-community/slider';
 
 interface BacktestFormProps {
   config: {
@@ -20,12 +21,24 @@ interface BacktestFormProps {
 }
 
 export function BacktestForm({ config, onConfigChange }: BacktestFormProps) {
+  const validIntervals = ['1m', '2m', '5m', '15m', '30m', '60m', '90m', '1h', '1d', '5d', '1wk', '1mo', '3mo'];
+  const [isStopLossLinked, setIsStopLossLinked] = React.useState(false);
   const handleFeatureHorizonsChange = (text: string) => {
     try {
       const horizons = text.split(',').map(num => parseInt(num.trim()));
       onConfigChange('featureHorizons', horizons);
     } catch (error) {
       console.error('Invalid feature horizons format');
+    }
+  };
+
+  const handleProfitPercChange = (value: string) => {
+    const profitPerc = parseFloat(value);
+    onConfigChange('profitPerc', profitPerc);
+
+    // Update stop loss if linked
+    if (isStopLossLinked) {
+      onConfigChange('stopLossPerc', profitPerc * 0.5); // Set stop loss as 50% of profit percentage
     }
   };
 
@@ -43,22 +56,34 @@ export function BacktestForm({ config, onConfigChange }: BacktestFormProps) {
 
       <View style={styles.formGroup}>
         <ThemedText style={styles.label}>Interval</ThemedText>
-        <TextInput
-          style={styles.input}
-          value={config.interval}
-          onChangeText={(value) => onConfigChange('interval', value)}
-          placeholder="5m"
-        />
+        <View style={styles.intervalButtons}>
+          {validIntervals.map((interval) => (
+            <TouchableOpacity
+              key={interval}
+              style={[
+                styles.intervalButton,
+                config.interval === interval && styles.selectedIntervalButton,
+              ]}
+              onPress={() => onConfigChange('interval', interval)}
+            >
+              <Text style={styles.intervalButtonText}>{interval}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
       </View>
 
       <View style={styles.formGroup}>
-        <ThemedText style={styles.label}>Confidence (0-1)</ThemedText>
-        <TextInput
-          style={styles.input}
-          value={config.confidence.toString()}
-          onChangeText={(value) => onConfigChange('confidence', parseFloat(value))}
-          keyboardType="decimal-pad"
-          placeholder="0.6"
+        <ThemedText style={styles.label}>Confidence ({Math.round(config.confidence * 100)}%)</ThemedText>
+        <Slider
+          style={styles.slider}
+          minimumValue={0.5}
+          maximumValue={1}
+          step={0.01}
+          value={config.confidence}
+          onValueChange={(value) => onConfigChange('confidence', value)}
+          minimumTrackTintColor="#007bff"
+          maximumTrackTintColor="#ddd"
+          thumbTintColor="#007bff"
         />
       </View>
 
@@ -86,12 +111,25 @@ export function BacktestForm({ config, onConfigChange }: BacktestFormProps) {
 
       <View style={styles.formGroup}>
         <ThemedText style={styles.label}>Stop Loss Percentage</ThemedText>
+        <View style={styles.stopLossContainer}>
+          <Switch
+            value={isStopLossLinked}
+            onValueChange={(value) => {
+              setIsStopLossLinked(value);
+              if (value) {
+                onConfigChange('stopLossPerc', config.profitPerc * 0.5); // Set stop loss as 50% of profit percentage
+              }
+            }}
+          />
+          <Text style={styles.stopLossText}>Set as 50% of Profit Percentage</Text>
+        </View>
         <TextInput
           style={styles.input}
           value={config.stopLossPerc.toString()}
           onChangeText={(value) => onConfigChange('stopLossPerc', parseFloat(value))}
           keyboardType="decimal-pad"
           placeholder="0.05"
+          editable={!isStopLossLinked}
         />
       </View>
 
@@ -172,5 +210,36 @@ const styles = StyleSheet.create({
     fontSize: 16,
     borderWidth: 1,
     borderColor: '#ddd',
+  },
+  intervalButtons: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  intervalButton: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: '#f0f0f0',
+  },
+  selectedIntervalButton: {
+    backgroundColor: '#007bff',
+  },
+  intervalButtonText: {
+    fontSize: 14,
+    color: '#333',
+  },
+  slider: {
+    width: '100%',
+    height: 40,
+  },
+  stopLossContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  stopLossText: {
+    marginLeft: 8,
+    fontSize: 14,
+    color: '#333',
   },
 });
