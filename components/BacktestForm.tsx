@@ -311,7 +311,7 @@ export function BacktestForm({ config, onConfigChange }: BacktestFormProps) {
             const newValue = isNaN(parsedValue) ? 0 : parsedValue;
             onConfigChange('longBias', newValue);
           }}
-          keyboardType="decimal-pad"
+          keyboardType="number-pad"
           placeholder="0"
           maxLength={2}
         />
@@ -331,13 +331,31 @@ export function BacktestForm({ config, onConfigChange }: BacktestFormProps) {
       </View>
 
       <View style={styles.formGroup}>
-        <ThemedText style={styles.label}>Leverage</ThemedText>
+        <ThemedText style={styles.label}>Leverage Multiplier ({config.leverage})</ThemedText>
         <TextInput
           style={styles.input}
           value={config.leverage.toString()}
-          onChangeText={(value) => onConfigChange('leverage', parseInt(value))}
+          onChangeText={(value) => {
+            const parsedValue = parseInt(value, 10);
+            const newValue = isNaN(parsedValue) ? 0 : parsedValue;
+            onConfigChange('leverage', newValue);
+          }}
           keyboardType="number-pad"
-          placeholder="100"
+          placeholder="0"
+          maxLength={2}
+        />
+        <Slider
+          style={styles.slider}
+          minimumValue={1}
+          maximumValue={500}
+          step={1}
+          value={config.leverage}
+          onValueChange={(value) => {
+            onConfigChange('leverage', value);
+          }}
+          minimumTrackTintColor="#007bff"
+          maximumTrackTintColor="#ddd"
+          thumbTintColor="#007bff"
         />
       </View>
     </ScrollView>
