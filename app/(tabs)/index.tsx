@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
   },
   logContainer: {
-    maxHeight: 300,
+    maxHeight: 800,
     marginTop: 10,
     padding: 10,
     backgroundColor: '#f0f0f0',
