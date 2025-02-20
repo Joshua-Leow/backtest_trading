@@ -255,11 +255,12 @@ export function BacktestForm({ config, onConfigChange }: BacktestFormProps) {
           }}
           keyboardType="number-pad"
           placeholder="0"
+          maxLength={3}
         />
         <Slider
           style={styles.slider}
           minimumValue={0}
-          maximumValue={100}
+          maximumValue={999}
           step={1}
           value={config.gapBetweenTrades}
           onValueChange={(value) => {
@@ -283,11 +284,12 @@ export function BacktestForm({ config, onConfigChange }: BacktestFormProps) {
           }}
           keyboardType="number-pad"
           placeholder="10"
+          maxLength={3}
         />
         <Slider
           style={styles.slider}
           minimumValue={1}
-          maximumValue={100}
+          maximumValue={999}
           step={1}
           value={config.maxPositions}
           onValueChange={(value) => {
@@ -300,13 +302,31 @@ export function BacktestForm({ config, onConfigChange }: BacktestFormProps) {
       </View>
 
       <View style={styles.formGroup}>
-        <ThemedText style={styles.label}>Long Bias</ThemedText>
+        <ThemedText style={styles.label}>Long Bias ({config.longBias})</ThemedText>
         <TextInput
           style={styles.input}
           value={config.longBias.toString()}
-          onChangeText={(value) => onConfigChange('longBias', parseFloat(value))}
+          onChangeText={(value) => {
+            const parsedValue = parseInt(value, 10);
+            const newValue = isNaN(parsedValue) ? 0 : parsedValue;
+            onConfigChange('longBias', newValue);
+          }}
           keyboardType="decimal-pad"
-          placeholder="1.0"
+          placeholder="0"
+          maxLength={2}
+        />
+        <Slider
+          style={styles.slider}
+          minimumValue={-99}
+          maximumValue={99}
+          step={1}
+          value={config.longBias}
+          onValueChange={(value) => {
+            onConfigChange('longBias', value);
+          }}
+          minimumTrackTintColor="#007bff"
+          maximumTrackTintColor="#ddd"
+          thumbTintColor="#007bff"
         />
       </View>
 
