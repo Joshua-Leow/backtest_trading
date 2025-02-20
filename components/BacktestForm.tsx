@@ -121,12 +121,24 @@ export function BacktestForm({ config, onConfigChange }: BacktestFormProps) {
           style={styles.input}
           value={config.profitPerc.toString()}
           onChangeText={(value) => {
-            const parsedValue = parseInt(value, 10);
+            let parsedValue = parseFloat(value);
             const newValue = isNaN(parsedValue) ? 0 : parsedValue;
             onConfigChange('profitPerc', newValue);
+            if (!isNaN(parsedValue)) {
+              // Limit to 3 decimal places
+              parsedValue = parseFloat(parsedValue.toFixed(3));
+              onConfigChange('profitPerc', parsedValue);
+
+              // Update stopLossPerc if switch is ON
+              if (isStopLossLinked) {
+                const multiplier = config.stopLossPerc / config.profitPerc;
+                onConfigChange('stopLossPerc', parsedValue * multiplier);
+              }
+            }
           }}
           keyboardType="decimal-pad"
           placeholder="240"
+          maxLength={6} // Ensures 3 digits before and up to 3 decimal places
         />
         <Slider
           style={styles.slider}
@@ -135,7 +147,13 @@ export function BacktestForm({ config, onConfigChange }: BacktestFormProps) {
           step={0.001}
           value={config.profitPerc}
           onValueChange={(value) => {
-            onConfigChange('profitPerc', value);
+            onConfigChange('profitPerc', parseFloat(value.toFixed(3)));
+            
+            // Update stopLossPerc if switch is ON
+            if (isStopLossLinked) {
+              const multiplier = config.stopLossPerc / config.profitPerc;
+              onConfigChange('stopLossPerc', value * multiplier);
+            }
           }}
           minimumTrackTintColor="#007bff"
           maximumTrackTintColor="#ddd"
@@ -144,17 +162,14 @@ export function BacktestForm({ config, onConfigChange }: BacktestFormProps) {
       </View>
 
       <View style={styles.formGroup}>
-        <ThemedText style={styles.label}>Stop Loss Percentage ({config.stopLossPerc}%)</ThemedText>
-        
-        {/* Switch to Link Stop Loss to Profit Percentage */}
+        <ThemedText style={styles.label}>Stop Loss Percentage ({config.stopLossPerc.toFixed(3)}%)</ThemedText>
         <View style={styles.stopLossContainer}>
           <Switch
             value={isStopLossLinked}
             onValueChange={(value) => {
               setIsStopLossLinked(value);
               if (value) {
-                // When the switch is turned ON, set stopLossPerc as a ratio of profitPerc
-                const initialMultiplier = 0.5; // Default multiplier (e.g., 50% of profitPerc)
+                const initialMultiplier = 0.5;
                 onConfigChange('stopLossPerc', config.profitPerc * initialMultiplier);
               }
             }}
@@ -162,32 +177,33 @@ export function BacktestForm({ config, onConfigChange }: BacktestFormProps) {
           <Text style={styles.stopLossText}>Set Stop Loss Percentage as a Ratio of Profit Percentage</Text>
         </View>
 
-        {/* Conditional Rendering Based on isStopLossLinked */}
         {isStopLossLinked ? (
-          // When isStopLossLinked is ON
           <>
             <View style={styles.linkedInputContainer}>
-              <Text style={styles.linkedInputText}>Profit Percentage x </Text>
+              <Text style={styles.linkedInputText}>Stop Loss Percentage = Profit Percentage x </Text>
               <TextInput
                 style={[styles.input, styles.linkedInput]}
-                value={(config.stopLossPerc / config.profitPerc).toFixed(3)} // Display multiplier
+                value={(config.stopLossPerc / config.profitPerc).toFixed(3)}
                 onChangeText={(value) => {
-                  const parsedValue = parseFloat(value);
-                  const multiplier = isNaN(parsedValue) ? 0 : parsedValue;
-                  onConfigChange('stopLossPerc', config.profitPerc * multiplier); // Update stopLossPerc
+                  let parsedValue = parseFloat(value);
+                  if (!isNaN(parsedValue)) {
+                    parsedValue = parseFloat(parsedValue.toFixed(3));
+                    onConfigChange('stopLossPerc', config.profitPerc * parsedValue);
+                  }
                 }}
                 keyboardType="decimal-pad"
                 placeholder="0.5"
+                maxLength={6} // Limit to 3 decimal places
               />
             </View>
             <Slider
               style={styles.slider}
               minimumValue={0.001}
-              maximumValue={2} // Allow up to 2x profitPerc
+              maximumValue={2}
               step={0.001}
-              value={config.stopLossPerc / config.profitPerc} // Slider value is the multiplier
+              value={config.stopLossPerc / config.profitPerc}
               onValueChange={(value) => {
-                onConfigChange('stopLossPerc', config.profitPerc * value); // Update stopLossPerc
+                onConfigChange('stopLossPerc', parseFloat((config.profitPerc * value).toFixed(3)));
               }}
               minimumTrackTintColor="#007bff"
               maximumTrackTintColor="#ddd"
@@ -195,18 +211,20 @@ export function BacktestForm({ config, onConfigChange }: BacktestFormProps) {
             />
           </>
         ) : (
-          // When isStopLossLinked is OFF
           <>
             <TextInput
               style={styles.input}
               value={config.stopLossPerc.toString()}
               onChangeText={(value) => {
-                const parsedValue = parseFloat(value);
-                const newValue = isNaN(parsedValue) ? 0 : parsedValue;
-                onConfigChange('stopLossPerc', newValue);
+                let parsedValue = parseFloat(value);
+                if (!isNaN(parsedValue)) {
+                  parsedValue = parseFloat(parsedValue.toFixed(3));
+                  onConfigChange('stopLossPerc', parsedValue);
+                }
               }}
               keyboardType="decimal-pad"
               placeholder="0.05"
+              maxLength={6} // Limit to 3 decimal places
             />
             <Slider
               style={styles.slider}
@@ -215,7 +233,7 @@ export function BacktestForm({ config, onConfigChange }: BacktestFormProps) {
               step={0.001}
               value={config.stopLossPerc}
               onValueChange={(value) => {
-                onConfigChange('stopLossPerc', value);
+                onConfigChange('stopLossPerc', parseFloat(value.toFixed(3)));
               }}
               minimumTrackTintColor="#007bff"
               maximumTrackTintColor="#ddd"
