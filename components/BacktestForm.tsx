@@ -144,27 +144,85 @@ export function BacktestForm({ config, onConfigChange }: BacktestFormProps) {
       </View>
 
       <View style={styles.formGroup}>
-        <ThemedText style={styles.label}>Stop Loss Percentage</ThemedText>
+        <ThemedText style={styles.label}>Stop Loss Percentage ({config.stopLossPerc}%)</ThemedText>
+        
+        {/* Switch to Link Stop Loss to Profit Percentage */}
         <View style={styles.stopLossContainer}>
           <Switch
             value={isStopLossLinked}
             onValueChange={(value) => {
               setIsStopLossLinked(value);
               if (value) {
-                onConfigChange('stopLossPerc', config.profitPerc * 0.5); // Set stop loss as 50% of profit percentage
+                // When the switch is turned ON, set stopLossPerc as a ratio of profitPerc
+                const initialMultiplier = 0.5; // Default multiplier (e.g., 50% of profitPerc)
+                onConfigChange('stopLossPerc', config.profitPerc * initialMultiplier);
               }
             }}
           />
-          <Text style={styles.stopLossText}>Set as 50% of Profit Percentage</Text>
+          <Text style={styles.stopLossText}>Set Stop Loss Percentage as a Ratio of Profit Percentage</Text>
         </View>
-        <TextInput
-          style={styles.input}
-          value={config.stopLossPerc.toString()}
-          onChangeText={(value) => onConfigChange('stopLossPerc', parseFloat(value))}
-          keyboardType="decimal-pad"
-          placeholder="0.05"
-          editable={!isStopLossLinked}
-        />
+
+        {/* Conditional Rendering Based on isStopLossLinked */}
+        {isStopLossLinked ? (
+          // When isStopLossLinked is ON
+          <>
+            <View style={styles.linkedInputContainer}>
+              <Text style={styles.linkedInputText}>Profit Percentage x </Text>
+              <TextInput
+                style={[styles.input, styles.linkedInput]}
+                value={(config.stopLossPerc / config.profitPerc).toFixed(3)} // Display multiplier
+                onChangeText={(value) => {
+                  const parsedValue = parseFloat(value);
+                  const multiplier = isNaN(parsedValue) ? 0 : parsedValue;
+                  onConfigChange('stopLossPerc', config.profitPerc * multiplier); // Update stopLossPerc
+                }}
+                keyboardType="decimal-pad"
+                placeholder="0.5"
+              />
+            </View>
+            <Slider
+              style={styles.slider}
+              minimumValue={0.001}
+              maximumValue={2} // Allow up to 2x profitPerc
+              step={0.001}
+              value={config.stopLossPerc / config.profitPerc} // Slider value is the multiplier
+              onValueChange={(value) => {
+                onConfigChange('stopLossPerc', config.profitPerc * value); // Update stopLossPerc
+              }}
+              minimumTrackTintColor="#007bff"
+              maximumTrackTintColor="#ddd"
+              thumbTintColor="#007bff"
+            />
+          </>
+        ) : (
+          // When isStopLossLinked is OFF
+          <>
+            <TextInput
+              style={styles.input}
+              value={config.stopLossPerc.toString()}
+              onChangeText={(value) => {
+                const parsedValue = parseFloat(value);
+                const newValue = isNaN(parsedValue) ? 0 : parsedValue;
+                onConfigChange('stopLossPerc', newValue);
+              }}
+              keyboardType="decimal-pad"
+              placeholder="0.05"
+            />
+            <Slider
+              style={styles.slider}
+              minimumValue={0.001}
+              maximumValue={10}
+              step={0.001}
+              value={config.stopLossPerc}
+              onValueChange={(value) => {
+                onConfigChange('stopLossPerc', value);
+              }}
+              minimumTrackTintColor="#007bff"
+              maximumTrackTintColor="#ddd"
+              thumbTintColor="#007bff"
+            />
+          </>
+        )}
       </View>
 
       <View style={styles.formGroup}>
@@ -275,5 +333,18 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     fontSize: 14,
     color: '#333',
+  },
+  linkedInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  linkedInputText: {
+    fontSize: 16,
+    marginRight: 8,
+    color: '#333',
+  },
+  linkedInput: {
+    flex: 1,
   },
 });
